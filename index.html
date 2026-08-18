@@ -1,0 +1,1231 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>企画セレクタ</title>
+<style>
+:root{
+  --bg:#f4f4f1; --surface:#ffffff; --surface-2:#faf9f7;
+  --text:#1c1c1a; --muted:#6b6b64; --border:#e2e1db;
+  --accent:#2f6f4e;
+  --o:#2f7a52; --o-bg:#e6f2ea;
+  --t:#a8700f; --t-bg:#fbf1dd;
+  --x:#b2452f; --x-bg:#fbeae6;
+  --h:#5a6b86; --h-bg:#ecf0f6;
+  --radius:12px;
+  --shadow:0 1px 2px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#161614; --surface:#1f1f1c; --surface-2:#262622;
+    --text:#eceae4; --muted:#9b998f; --border:#34342e;
+    --accent:#7fbd97;
+    --o:#7fbd97; --o-bg:#1e2f26;
+    --t:#dcae5a; --t-bg:#33291a;
+    --x:#e08a72; --x-bg:#331f1a;
+    --h:#9db0cc; --h-bg:#222833;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.25);
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif;
+  font-size:15px; line-height:1.7; -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:780px;margin:0 auto;padding:0 16px 120px}
+
+/* ---------- storage warning ---------- */
+.warnbar{
+  background:var(--t-bg); border:1px solid var(--t); color:var(--text);
+  border-radius:var(--radius); padding:12px 14px; margin:16px 0 0;
+  font-size:13px; line-height:1.65;
+}
+.warnbar b{color:var(--t)}
+
+/* ---------- header / tabs ---------- */
+header{
+  position:sticky; top:0; z-index:50;
+  background:color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter:saturate(180%) blur(12px);
+  border-bottom:1px solid var(--border);
+}
+.hbar{max-width:780px;margin:0 auto;padding:10px 16px 0}
+.brand{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}
+.brand h1{font-size:16px;margin:0;letter-spacing:.02em}
+.brand span{font-size:12px;color:var(--muted)}
+.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  flex:0 0 auto; appearance:none; background:none; border:none;
+  font:inherit; font-size:13.5px; color:var(--muted); cursor:pointer;
+  padding:9px 13px; border-bottom:2px solid transparent; white-space:nowrap;
+}
+.tab[aria-selected="true"]{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+.tab .badge{
+  display:inline-block;min-width:18px;padding:0 5px;margin-left:5px;
+  background:var(--border);color:var(--muted);
+  border-radius:9px;font-size:11px;line-height:18px;text-align:center;font-weight:600;
+}
+
+/* ---------- generic ---------- */
+h2{font-size:15px;margin:28px 0 10px;letter-spacing:.02em}
+h2:first-child{margin-top:22px}
+.hint{font-size:12.5px;color:var(--muted);margin:0 0 12px}
+label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin:14px 0 5px}
+input[type=text],input[type=number],textarea,select{
+  width:100%;font:inherit;font-size:15px;color:var(--text);
+  background:var(--surface);border:1px solid var(--border);border-radius:9px;
+  padding:9px 11px;
+}
+textarea{resize:vertical;line-height:1.65}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:transparent}
+select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:34px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1 1 160px;min-width:0}
+
+button.btn{
+  appearance:none;font:inherit;font-size:14px;font-weight:600;cursor:pointer;
+  background:var(--surface);color:var(--text);
+  border:1px solid var(--border);border-radius:9px;padding:9px 16px;
+}
+button.btn:hover{background:var(--surface-2)}
+button.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) button.btn.primary{color:#12211a}}
+button.btn.primary:hover{filter:brightness(1.08)}
+button.btn:disabled{opacity:.4;cursor:not-allowed}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.panel{display:none}
+.panel.active{display:block}
+.note{font-size:12.5px;color:var(--muted);background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:10px 12px;margin-top:12px}
+.empty{text-align:center;color:var(--muted);padding:56px 20px;font-size:14px}
+
+/* ---------- prompt output ---------- */
+#promptOut{
+  width:100%;min-height:300px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:12.5px;line-height:1.6;white-space:pre;overflow-x:auto;
+}
+
+/* ---------- csv fallback box ---------- */
+.csvbox{margin-top:12px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2);padding:0 12px}
+.csvbox summary{cursor:pointer;padding:11px 0;font-size:13px;font-weight:600}
+.csvbox[open]{padding-bottom:12px}
+.csvbox .hint{margin:0 0 8px}
+#csvText{
+  width:100%;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:12px;line-height:1.6;white-space:pre;overflow-x:auto;
+}
+
+/* ---------- evaluate ---------- */
+.progress{margin:18px 0 12px}
+.pbar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;display:flex}
+.pbar i{display:block;height:100%}
+.pbar i.o{background:var(--o)} .pbar i.t{background:var(--t)}
+.pbar i.x{background:var(--x)} .pbar i.h{background:var(--h)}
+.pmeta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:7px}
+
+.idea{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);min-height:210px}
+.idea .no{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:.06em}
+.idea h3{font-size:20px;line-height:1.45;margin:6px 0 12px;letter-spacing:.01em}
+.idea p{margin:0;font-size:14.5px;line-height:1.85;white-space:pre-wrap}
+.stamp{display:inline-block;font-size:12px;font-weight:700;padding:2px 10px;border-radius:20px;margin-top:14px}
+.stamp.o{background:var(--o-bg);color:var(--o)} .stamp.t{background:var(--t-bg);color:var(--t)}
+.stamp.x{background:var(--x-bg);color:var(--x)} .stamp.h{background:var(--h-bg);color:var(--h)}
+
+.rate{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.rate button{
+  appearance:none;font:inherit;cursor:pointer;
+  background:var(--surface);border:1.5px solid var(--border);border-radius:11px;
+  padding:13px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:3px;
+  color:var(--text);transition:transform .06s ease;
+}
+.rate button:active{transform:scale(.96)}
+.rate button .m{font-size:23px;line-height:1;font-weight:600}
+.rate button .l{font-size:11px;color:var(--muted);font-weight:600}
+.rate button .k{font-size:10px;color:var(--muted);opacity:.6;font-variant-numeric:tabular-nums}
+.rate button[data-r=o].on{background:var(--o-bg);border-color:var(--o);color:var(--o)}
+.rate button[data-r=t].on{background:var(--t-bg);border-color:var(--t);color:var(--t)}
+.rate button[data-r=x].on{background:var(--x-bg);border-color:var(--x);color:var(--x)}
+.rate button[data-r=h].on{background:var(--h-bg);border-color:var(--h);color:var(--h)}
+.rate button.on .l{color:inherit}
+
+#memo{min-height:64px;margin-top:4px}
+.nav{display:flex;gap:8px;align-items:center;margin-top:16px}
+.nav .sp{flex:1}
+.nav .btn{white-space:nowrap;padding:9px 13px}
+.opts{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);margin-top:14px}
+.opts input{width:auto;margin:0}
+.kbd{font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.9}
+.kbd b{background:var(--surface-2);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-weight:600;font-family:ui-monospace,monospace;font-size:11px}
+@media (max-width:600px){.kbd{display:none}.rate button .k{display:none}}
+
+/* ---------- swipe (mobile) ---------- */
+.idea{position:relative;touch-action:pan-y}
+.idea.dragging{user-select:none;-webkit-user-select:none;will-change:transform}
+.swipe-stamp{
+  position:absolute;top:16px;z-index:2;
+  font-size:34px;font-weight:800;line-height:1;
+  padding:8px 20px;border:3px solid;border-radius:12px;
+  opacity:0;pointer-events:none;
+  box-shadow:0 2px 10px rgba(0,0,0,.10);
+}
+.swipe-stamp.o{left:16px;color:var(--o);border-color:var(--o);background:var(--o-bg);transform:rotate(-13deg)}
+.swipe-stamp.x{right:16px;color:var(--x);border-color:var(--x);background:var(--x-bg);transform:rotate(13deg)}
+@media (prefers-reduced-motion:reduce){ .idea{transition:none !important} }
+.swipe-hint{display:none;font-size:12px;color:var(--muted);text-align:center;margin:10px 0 0}
+.swipe-hint b{font-weight:700;color:var(--text)}
+
+/* ---------- tabs: mobile ---------- */
+.tab .sm{display:none}
+@media (max-width:640px){
+  .tabs{overflow-x:visible}
+  .tab{flex:1 1 0;padding:9px 2px;font-size:12.5px;text-align:center}
+  .tab .lg{display:none}
+  .tab .sm{display:inline}
+  .tab .badge{margin-left:3px;min-width:0;padding:0 4px;font-size:10px;line-height:16px}
+  .swipe-hint{display:block}
+}
+
+/* ---------- results ---------- */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:18px 0}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 6px;text-align:center}
+.stat b{display:block;font-size:21px;line-height:1.2;font-variant-numeric:tabular-nums}
+.stat span{font-size:11px;color:var(--muted)}
+.stat.o b{color:var(--o)} .stat.t b{color:var(--t)} .stat.x b{color:var(--x)} .stat.h b{color:var(--h)}
+
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.chip{
+  appearance:none;font:inherit;font-size:12.5px;cursor:pointer;
+  background:var(--surface);border:1px solid var(--border);border-radius:20px;
+  padding:5px 13px;color:var(--muted);
+}
+.chip[aria-pressed="true"]{background:var(--text);border-color:var(--text);color:var(--bg);font-weight:600}
+
+.list{display:flex;flex-direction:column;gap:7px}
+.item{
+  display:flex;gap:11px;align-items:flex-start;text-align:left;width:100%;
+  appearance:none;font:inherit;cursor:pointer;
+  background:var(--surface);border:1px solid var(--border);border-left-width:3px;
+  border-radius:9px;padding:11px 13px;color:var(--text);
+}
+.item:hover{background:var(--surface-2)}
+.item.o{border-left-color:var(--o)} .item.t{border-left-color:var(--t)}
+.item.x{border-left-color:var(--x)} .item.h{border-left-color:var(--h)}
+.item.n{border-left-color:var(--border)}
+.item .mk{font-size:15px;font-weight:700;width:20px;flex:0 0 20px;text-align:center;padding-top:1px}
+.item.o .mk{color:var(--o)} .item.t .mk{color:var(--t)}
+.item.x .mk{color:var(--x)} .item.h .mk{color:var(--h)} .item.n .mk{color:var(--muted)}
+.item .bd{flex:1;min-width:0}
+.item .ti{font-size:14px;font-weight:600;line-height:1.5}
+.item .ov{font-size:12.5px;color:var(--muted);line-height:1.6;margin-top:2px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.item .mo{font-size:12px;color:var(--muted);margin-top:5px;padding-left:8px;border-left:2px solid var(--border)}
+.item .nn{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;flex:0 0 auto;padding-top:2px}
+
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translate(-50%,14px);
+  background:var(--text);color:var(--bg);font-size:13px;font-weight:600;
+  padding:10px 20px;border-radius:22px;opacity:0;pointer-events:none;
+  transition:opacity .18s,transform .18s;z-index:200;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hbar">
+    <div class="brand"><h1>企画セレクタ</h1><span id="brandSub"></span></div>
+    <nav class="tabs" role="tablist">
+      <button class="tab" role="tab" data-p="prompt" aria-selected="true"><span class="lg">1. プロンプト作成</span><span class="sm">プロンプト</span></button>
+      <button class="tab" role="tab" data-p="import" aria-selected="false"><span class="lg">2. 読み込み</span><span class="sm">読み込み</span></button>
+      <button class="tab" role="tab" data-p="eval" aria-selected="false"><span class="lg">3. 評価</span><span class="sm">評価</span><span class="badge" id="bEval">0</span></button>
+      <button class="tab" role="tab" data-p="result" aria-selected="false"><span class="lg">4. 結果</span><span class="sm">結果</span></button>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+<div class="warnbar" id="noStore" hidden>
+  <b>この環境では評価を保存できません。</b>
+  ページを閉じる・再読み込みすると、評価内容は消えます。
+  区切りのいいところで「4. 結果」から CSV をコピーし、メモアプリなどに控えてください。
+</div>
+
+<!-- ============ 1. PROMPT ============ -->
+<section class="panel active" id="p-prompt">
+  <h2>企画案を量産するプロンプトを作る</h2>
+  <p class="hint">条件を入れると Claude 用のプロンプトができます。コピーして Claude に貼り、出てきた表を「2. 読み込み」へ。</p>
+
+  <div class="card">
+    <label for="fOutline">企画の概要 <span style="font-weight:400">（箇条書きでOK・必須）</span></label>
+    <textarea id="fOutline" rows="6" placeholder="・地方の老舗和菓子店のブランド動画
+・創業120年、若い世代に知られていない
+・「伝統」を押し出しすぎず、日常に馴染む感じにしたい
+・店主のキャラクターが濃くて面白い"></textarea>
+
+    <div class="row">
+      <div>
+        <label for="fFormat">企画の形式</label>
+        <select id="fFormat">
+          <option>広告（TVCM・Web動画広告）</option>
+          <option>SNS 動画（縦型・ショート）</option>
+          <option>ブランドムービー</option>
+          <option>商品・サービス紹介</option>
+          <option>イベント映像（オープニング・本編）</option>
+          <option>デジタルサイネージ</option>
+          <option>採用・会社紹介</option>
+          <option>教育・研修動画</option>
+          <option>ドキュメンタリー</option>
+          <option>ミュージックビデオ</option>
+          <option value="__other__">その他（自由入力）</option>
+        </select>
+        <input type="text" id="fFormatOther" placeholder="形式を入力" style="display:none;margin-top:7px">
+      </div>
+      <div>
+        <label for="fCount">出力する企画案の数</label>
+        <select id="fCount">
+          <option>20</option><option>30</option><option>50</option>
+          <option>80</option><option>100</option>
+          <option selected>150</option><option>200</option>
+          <option value="__other__">その他（自由入力）</option>
+        </select>
+        <input type="number" id="fCountOther" min="1" max="999" placeholder="案数" style="display:none;margin-top:7px">
+      </div>
+    </div>
+
+    <label for="fTitleFmt">タイトルの形式（任意）</label>
+    <input type="text" id="fTitleFmt" placeholder="◯◯拳　／　◯◯拳法　／　〜の日　など">
+    <p class="hint" style="margin:6px 0 0">指定すると、すべての企画タイトルをこの型で作らせます。空欄なら自由な名前になります。</p>
+
+    <div class="row">
+      <div>
+        <label for="fTarget">ターゲット</label>
+        <input type="text" id="fTarget" placeholder="20〜30代の女性、都市部在住">
+      </div>
+      <div>
+        <label for="fLength">尺・フォーマット</label>
+        <input type="text" id="fLength" placeholder="30秒 / 縦型 9:16">
+      </div>
+    </div>
+
+    <label for="fGoal">目的・ゴール</label>
+    <input type="text" id="fGoal" placeholder="認知拡大。まず「知ってもらう」ことを優先">
+
+    <label for="fTone">トーン＆マナー</label>
+    <input type="text" id="fTone" placeholder="上品すぎず、少しユーモアがある">
+
+    <label for="fNg">制約・NG・必須要素</label>
+    <textarea id="fNg" rows="3" placeholder="・タレント起用はなし
+・店内での撮影が中心
+・タイトルは「◯◯拳」の形で統一する"></textarea>
+
+    <div class="btnrow">
+      <button class="btn primary" id="btnGen">プロンプトを作る</button>
+      <button class="btn" id="btnClearForm">入力をクリア</button>
+    </div>
+  </div>
+
+  <div id="promptWrap" style="display:none">
+    <h2>できたプロンプト</h2>
+    <textarea id="promptOut" readonly spellcheck="false"></textarea>
+    <div class="btnrow">
+      <button class="btn primary" id="btnCopyPrompt">プロンプトをコピー</button>
+    </div>
+    <div class="note">コピーしたら Claude に貼り付けてください。返ってきた CSV（または表）をそのまま「2. 読み込み」に貼れば取り込めます。</div>
+  </div>
+</section>
+
+<!-- ============ 2. IMPORT ============ -->
+<section class="panel" id="p-import">
+  <h2>企画案を読み込む</h2>
+  <p class="hint">Claude の出力をそのまま貼り付けてください。CSV・タブ区切り・Markdown の表、どれでも読み取れます。<code>```</code> で囲まれたままでも大丈夫です。</p>
+
+  <div class="card">
+    <label for="importText">ここに貼り付け</label>
+    <textarea id="importText" rows="12" spellcheck="false" placeholder="id,title,overview
+1,朝の3分,開店前の仕込みだけを淡々と映す。音は作業音のみ。
+2,120年目の新人,今年入った若手職人の一年を追う。
+..."></textarea>
+    <div class="btnrow">
+      <button class="btn primary" id="btnImport">読み込む</button>
+      <button class="btn" id="btnFile">ファイルを選ぶ…</button>
+      <input type="file" id="fileInput" accept=".csv,.tsv,.txt,.md" style="display:none">
+    </div>
+    <div id="importMsg" class="note" style="display:none"></div>
+  </div>
+
+  <div id="curState" style="display:none">
+    <h2>いま読み込んでいるデータ</h2>
+    <div class="card">
+      <div id="curInfo" style="font-size:14px"></div>
+      <div class="btnrow">
+        <button class="btn" id="btnGoEval">評価をはじめる</button>
+        <button class="btn" id="btnReset">全部消してやり直す</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">読み込んだ企画と評価は、このブラウザの中だけに保存されます（サーバーには何も送られません）。別の端末とは共有されないので、結果は「4. 結果」から CSV に書き出して保管してください。</div>
+</section>
+
+<!-- ============ 3. EVAL ============ -->
+<section class="panel" id="p-eval">
+  <div id="evalEmpty" class="empty">まだ企画案がありません。<br>「2. 読み込み」から取り込んでください。</div>
+
+  <div id="evalMain" style="display:none">
+    <div class="progress">
+      <div class="pbar" id="pbar"></div>
+      <div class="pmeta"><span id="pLeft"></span><span id="pRight"></span></div>
+    </div>
+
+    <div class="idea" id="ideaCard">
+      <div class="swipe-stamp o" aria-hidden="true">◯</div>
+      <div class="swipe-stamp x" aria-hidden="true">×</div>
+      <div class="no" id="ideaNo"></div>
+      <h3 id="ideaTitle"></h3>
+      <p id="ideaOverview"></p>
+      <div id="ideaStamp"></div>
+    </div>
+    <p class="swipe-hint">← 左スワイプで <b>◯</b>　／　右スワイプで <b>×</b> →</p>
+
+    <div class="rate" id="rate">
+      <button data-r="o"><span class="m">◯</span><span class="l">良い</span><span class="k">1</span></button>
+      <button data-r="t"><span class="m">△</span><span class="l">迷う</span><span class="k">2</span></button>
+      <button data-r="x"><span class="m">×</span><span class="l">なし</span><span class="k">3</span></button>
+      <button data-r="h"><span class="m">⏸</span><span class="l">保留</span><span class="k">4</span></button>
+    </div>
+    <p class="hint" style="margin:8px 0 0;font-size:11.5px">△＝可能性はあるが迷う／⏸＝いまは判断しない（あとで見直す）。同じボタンをもう一度押すと取り消せます。</p>
+
+    <label for="memo">メモ（任意）</label>
+    <textarea id="memo" rows="2" placeholder="気になった点、直せば化けそうな点など"></textarea>
+
+    <div class="nav">
+      <button class="btn" id="btnPrev">← 前へ</button>
+      <button class="btn" id="btnNext">次へ →</button>
+      <span class="sp"></span>
+      <button class="btn" id="btnNextUnrated">未評価へ飛ぶ</button>
+    </div>
+
+    <div class="opts">
+      <input type="checkbox" id="optAuto" checked>
+      <label for="optAuto" style="margin:0;font-weight:400;cursor:pointer">評価したら自動で次へ進む</label>
+    </div>
+
+    <div class="kbd">
+      <b>1</b> ◯　<b>2</b> △　<b>3</b> ×　<b>4</b> 保留　<b>←</b> <b>→</b> 移動　<b>Enter</b> メモ欄へ　<b>Esc</b> メモ欄から抜ける
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4. RESULT ============ -->
+<section class="panel" id="p-result">
+  <div id="resEmpty" class="empty">まだ企画案がありません。</div>
+
+  <div id="resMain" style="display:none">
+    <h2>集計</h2>
+    <div class="stats" id="stats"></div>
+
+    <div class="btnrow" style="margin-bottom:6px">
+      <button class="btn primary" id="btnCsvCopy">CSV をコピー</button>
+      <button class="btn" id="btnCsvDl">CSV をダウンロード</button>
+      <button class="btn" id="btnCsvOnly">◯だけコピー</button>
+    </div>
+    <div class="note">ダウンロードが効かない環境（スマホや埋め込み表示など）では「コピー」を使い、スプレッドシートに貼り付けてください。Excel 用に BOM 付きで書き出します。</div>
+
+    <details class="csvbox">
+      <summary>CSV を表示して手動でコピー</summary>
+      <p class="hint">コピーボタンも効かない環境用の逃げ道です。枠内をタップすると全文が選択されます。</p>
+      <textarea id="csvText" readonly rows="8" spellcheck="false"></textarea>
+    </details>
+
+    <h2>一覧</h2>
+    <p class="hint">行をタップすると、その企画の評価画面に移動します。</p>
+    <div class="filters" id="filters">
+      <button class="chip" data-f="all" aria-pressed="true">すべて</button>
+      <button class="chip" data-f="o" aria-pressed="false">◯</button>
+      <button class="chip" data-f="t" aria-pressed="false">△</button>
+      <button class="chip" data-f="x" aria-pressed="false">×</button>
+      <button class="chip" data-f="h" aria-pressed="false">保留</button>
+      <button class="chip" data-f="n" aria-pressed="false">未評価</button>
+    </div>
+    <div class="list" id="list"></div>
+  </div>
+</section>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* =========================================================
+   state
+   ========================================================= */
+const KEY = "kikaku-selector-v1";
+const FORM_KEY = "kikaku-selector-form-v1";
+const MARK = { o:"◯", t:"△", x:"×", h:"保留" };
+
+let state = { ideas:[], evals:{}, cursor:0, importedAt:null };
+
+/* サンドボックス内 iframe では localStorage が例外を投げることがある */
+const STORE_OK = (()=>{
+  try{
+    const k = "__probe__";
+    localStorage.setItem(k, "1");
+    localStorage.removeItem(k);
+    return true;
+  }catch(e){ return false; }
+})();
+
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(!raw) return;
+    const d = JSON.parse(raw);
+    if(d && Array.isArray(d.ideas)){
+      state.ideas = d.ideas;
+      state.evals = d.evals || {};
+      state.cursor = Math.min(d.cursor || 0, Math.max(0, d.ideas.length - 1));
+      state.importedAt = d.importedAt || null;
+    }
+  }catch(e){ console.warn("復元に失敗", e); }
+}
+function save(){
+  if(!STORE_OK) return;
+  try{ localStorage.setItem(KEY, JSON.stringify(state)); }
+  catch(e){ toast("保存できませんでした（容量超過の可能性）"); }
+}
+
+const $ = id => document.getElementById(id);
+
+let toastTimer = null;
+function toast(msg){
+  const t = $("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove("show"), 1900);
+}
+
+async function copyText(text, okMsg){
+  try{
+    await navigator.clipboard.writeText(text);
+    toast(okMsg || "コピーしました");
+    return true;
+  }catch(e){
+    // フォールバック: 一時 textarea 経由
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.cssText = "position:fixed;top:0;left:0;opacity:0";
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    let ok = false;
+    try{ ok = document.execCommand("copy"); }catch(_){}
+    document.body.removeChild(ta);
+    toast(ok ? (okMsg || "コピーしました") : "コピーできませんでした。手動で選択してください");
+    return ok;
+  }
+}
+
+/* =========================================================
+   tabs
+   ========================================================= */
+const PANELS = ["prompt","import","eval","result"];
+function showPanel(name){
+  PANELS.forEach(p=>{
+    $("p-"+p).classList.toggle("active", p===name);
+  });
+  document.querySelectorAll(".tab").forEach(b=>{
+    const on = b.dataset.p === name;
+    b.setAttribute("aria-selected", String(on));
+    if(on) b.scrollIntoView({ block:"nearest", inline:"nearest" });
+  });
+  if(name==="eval") renderEval();
+  if(name==="result") renderResult();
+  if(name==="import") renderCurState();
+  window.scrollTo(0,0);
+}
+document.querySelectorAll(".tab").forEach(b=>{
+  b.addEventListener("click", ()=>showPanel(b.dataset.p));
+});
+
+/* =========================================================
+   1. prompt builder
+   ========================================================= */
+const FORM_FIELDS = ["fOutline","fFormat","fFormatOther","fCount","fCountOther","fTitleFmt","fTarget","fLength","fGoal","fTone","fNg"];
+
+function bindOther(selId, otherId){
+  const sel = $(selId), other = $(otherId);
+  const sync = ()=>{
+    const on = sel.value === "__other__";
+    other.style.display = on ? "block" : "none";
+    if(on) other.focus();
+  };
+  sel.addEventListener("change", ()=>{ sync(); saveForm(); });
+  return sync;
+}
+const syncFormat = bindOther("fFormat","fFormatOther");
+const syncCount  = bindOther("fCount","fCountOther");
+
+function saveForm(){
+  const d = {};
+  FORM_FIELDS.forEach(k=> d[k] = $(k).value);
+  try{ localStorage.setItem(FORM_KEY, JSON.stringify(d)); }catch(e){}
+}
+function loadForm(){
+  try{
+    const d = JSON.parse(localStorage.getItem(FORM_KEY) || "null");
+    if(!d) return;
+    FORM_FIELDS.forEach(k=>{ if(typeof d[k] === "string") $(k).value = d[k]; });
+  }catch(e){}
+  syncFormat(); syncCount();
+}
+FORM_FIELDS.forEach(k=> $(k).addEventListener("input", saveForm));
+
+function buildPrompt(){
+  const outline = $("fOutline").value.trim();
+  if(!outline){ toast("企画の概要を入力してください"); $("fOutline").focus(); return null; }
+
+  const format = $("fFormat").value === "__other__"
+    ? ($("fFormatOther").value.trim() || "指定なし")
+    : $("fFormat").value;
+
+  let count = $("fCount").value === "__other__" ? $("fCountOther").value.trim() : $("fCount").value;
+  count = parseInt(count, 10);
+  if(!count || count < 1){ toast("案数を入力してください"); return null; }
+
+  const opt = (label, id) => {
+    const v = $(id).value.trim();
+    return v ? `【${label}】\n${v}\n\n` : "";
+  };
+
+  return (
+`あなたは経験豊富な日本の映像ディレクターです。これから企画の発散を手伝ってもらいます。
+
+出力はすべて日本語で書いてください。英語は使わないでください。
+
+【企画の概要】
+${outline}
+
+【企画の形式】
+${format}
+
+${opt("目的・ゴール","fGoal")}${opt("ターゲット","fTarget")}${opt("尺・フォーマット","fLength")}${opt("トーン＆マナー","fTone")}${opt("制約・NG・必須要素","fNg")}【依頼】
+上の条件をふまえて、企画案を ${count} 本出してください。
+
+この段階で欲しいのは完成度ではなく幅です。粗いままで構いません。あとで人間が1本ずつ選別します。
+
+ただし、上の条件で指定した形式（タイトルの命名パターンなど）だけは例外です。**1本目から ${count} 本目まで、全件で必ず守ってください。** 数が多いと後半で崩れがちですが、最後の1本まで同じ厳密さを保ってください。
+
+■ 幅を出すための指示
+- 似た企画を並べない。1本ごとに切り口そのものを変える
+- 感情の入口を変える（喜／怒／哀／楽／愛／嫌悪／真剣／恐怖）。同じ題材でも入口が変われば別の企画になる。どれかに偏らせない
+- つかみの型を変える（最悪の出来事から始める／対照的な2人を並べる／時間制限を置く／ひとつの場所から出ない／誰もが抱える問題を扱う／話の途中から始める）
+- 語り手を変える（作り手／使い手／モノ自身／第三者／もういない人）
+- 時間の扱いを変える（一瞬／一日／数十年／逆再生／同じ時間の反復）
+- 予算・尺・人数・場所といった制約そのものをコンセプトの核にした案も混ぜる
+
+■ 手堅さと新規性の配分
+案全体を「手堅い」から「実験的」まで幅広く散らしてください。どちらかに寄せないこと。目安は次の配分です。
+
+- 約3割：**王道**。定石どおりで、企画会議にそのまま出しても通る。奇抜さより確実さを取った案
+- 約5割：**一点突破**。全体は手堅いが、切り口・構造・見せ方のどこか一箇所だけを大きく捻った案
+- 約2割：**実験的**。前例がなく、通るかどうか分からない案。予算や常識をいったん脇に置いてよい。ここが後で効く
+
+実験的な案も、奇をてらっただけで終わらせないこと。なぜそれがこの案件で成立するのかが、読んで1行で分かるように書く。
+
+■ 凡庸な案を避けるための指示
+- 「感動的」「心温まる」「魅力を伝える」など、どの案件にも当てはまる言い方は禁止。この案件でしか成立しない具体を書く
+- テーマをナレーションやセリフで直接語る案は書かない。画・小道具・反復・構造で示す
+- 見た瞬間に結末まで読める案は書かない。「もう少しで分かりそう」の位置で止める
+- 書き終えたあとで似た案が5本以上固まっていたら、その塊は捨てて、正反対の案に置き換える
+
+【出力形式】
+CSV だけを出力してください。**返答の1文字目が「id,」になるようにしてください。**
+挨拶・前置き・見出し・箇条書き・表・最後のまとめ・コードブロックの囲みは、いっさい付けないでください。
+
+id,title,overview
+
+- **上の条件でタイトルの形（例：「◯◯拳」のような命名パターン）や書き方が指定されている場合は、それを最優先で守ってください。** 以下の一般則と食い違うときは、必ず指定のほうを採用してください
+- **企画の中身（title と overview）は必ず日本語で書いてください。** 1行目のヘッダーだけは上記のとおり半角英字のままにしてください（ツールが読み取るためです）。ヘッダーが英語であることに引きずられて、企画本文まで英語で書かないでください
+- id は 1 から ${count} までの連番
+- title は 20 字以内を目安に、何の企画かがひと目で分かる日本語の名前にする。**ただしタイトルの形が指定されている場合は、字数や分かりやすさより、指定された形を優先すること**
+- overview は 80〜140 字の日本語。「冒頭5秒で画面に何が起きるか」→「そのあと何を見せるか」の順で書く。抽象語で埋めない
+- フィールドにカンマ・改行・引用符が含まれる場合は、必ずダブルクォートで囲む（引用符自体は "" と二重にする）
+
+【出力前の自己点検】
+CSV を書き終えたら、出力する前に次を点検してください。
+
+1. 上の条件で指定した形式（タイトルの命名パターンなど）を、**1本目から ${count} 本目まで全件**が守っているか
+2. 特に**後半（${Math.max(1, Math.ceil(count/2))} 本目以降）**を重点的に確認すること。長く書き続けると、この部分から形式が崩れます
+3. id が 1 から ${count} まで抜けなく連番になっているか
+4. 守れていない行が1つでもあれば、その行を書き直してから出力すること
+
+点検の過程や結果は書かないでください。出力するのは CSV 本体だけです。
+`);
+}
+
+$("btnGen").addEventListener("click", ()=>{
+  const p = buildPrompt();
+  if(!p) return;
+  $("promptOut").value = p;
+  $("promptWrap").style.display = "block";
+  $("promptWrap").scrollIntoView({behavior:"smooth", block:"start"});
+});
+$("btnCopyPrompt").addEventListener("click", ()=> copyText($("promptOut").value, "プロンプトをコピーしました"));
+$("btnClearForm").addEventListener("click", ()=>{
+  if(!confirm("入力内容を消しますか？")) return;
+  FORM_FIELDS.forEach(k=>{ const el=$(k); if(el.tagName==="SELECT") el.selectedIndex=0; else el.value=""; });
+  $("fCount").value = "150";
+  syncFormat(); syncCount(); saveForm();
+  $("promptWrap").style.display = "none";
+});
+
+/* =========================================================
+   2. import  —  CSV / TSV / Markdown table parser
+   ========================================================= */
+function stripFences(text){
+  // ```csv ... ``` を剥がす（複数あれば最初のブロック）
+  const m = text.match(/```[a-zA-Z]*\s*\n([\s\S]*?)```/);
+  return m ? m[1] : text.replace(/```/g, "");
+}
+
+function parseDelimited(text, delim){
+  const rows = [];
+  let row = [], field = "", i = 0, q = false, dirty = false;
+  while(i < text.length){
+    const c = text[i];
+    if(q){
+      if(c === '"'){
+        if(text[i+1] === '"'){ field += '"'; i += 2; continue; }
+        q = false; i++; continue;
+      }
+      field += c; i++; continue;
+    }
+    if(c === '"' && field.trim() === ""){ q = true; field = ""; dirty = true; i++; continue; }
+    if(c === delim){ row.push(field); field = ""; dirty = true; i++; continue; }
+    if(c === "\r"){ i++; continue; }
+    if(c === "\n"){
+      row.push(field); rows.push(row); row = []; field = ""; dirty = false; i++; continue;
+    }
+    field += c; dirty = true; i++;
+  }
+  if(dirty || field !== ""){ row.push(field); rows.push(row); }
+  return rows.map(r => r.map(s => s.trim())).filter(r => r.some(s => s !== ""));
+}
+
+function parseMarkdownTable(lines){
+  const rows = [];
+  for(const line of lines){
+    const t = line.trim();
+    if(!t.startsWith("|")) continue;
+    if(/^\|[\s:|-]+\|?$/.test(t)) continue;           // 区切り行
+    const cells = t.replace(/^\|/,"").replace(/\|$/,"").split("|").map(s=>s.trim());
+    if(cells.some(c=>c!=="")) rows.push(cells);
+  }
+  return rows;
+}
+
+const H_ID    = ["id","no","no.","番号","#"];
+const H_TITLE = ["title","タイトル","企画名","案","名称","件名"];
+const H_OVER  = ["overview","概要","説明","内容","詳細","description","body"];
+
+/* Markdown の強調記号などを落とす（Gemini / ChatGPT が付けがち） */
+function cleanCell(s){
+  return String(s == null ? "" : s)
+    .replace(/\*\*/g, "")
+    .replace(/^\s*`+|`+\s*$/g, "")
+    .trim();
+}
+
+function looksLikeHeader(row){
+  const n = row.map(s => cleanCell(s).toLowerCase());
+  return n.some(c => H_TITLE.includes(c)) || (n.some(c=>H_ID.includes(c)) && n.some(c=>H_OVER.includes(c)));
+}
+
+/* 前置き（「はい、承知しました」等）を捨てるため、ヘッダー行の位置を探す */
+function findHeaderLine(lines){
+  const lim = Math.min(lines.length, 40);
+  for(let i=0; i<lim; i++){
+    const cells = lines[i].split(/[,\t|]/).map(c => cleanCell(c).replace(/^"|"$/g, "").toLowerCase());
+    if(cells.length >= 2 && cells.some(c => H_TITLE.includes(c))) return i;
+  }
+  return -1;
+}
+
+/* 「1. タイトル — 概要」形式。CSV 指示を無視されたときの受け皿 */
+function parseNumberedList(lines){
+  const out = [];
+  for(const raw of lines){
+    const m = raw.match(/^\s*(?:[-*・]\s*)?(\d{1,3})\s*[.)．：:、]\s*(.+)$/);
+    if(!m) continue;
+    const rest = cleanCell(m[2]);
+    if(!rest) continue;
+    const sep = rest.match(/^(.{1,40}?)\s*(?:[—–―]|--|\s-\s|：|:|\|)\s*(.+)$/);
+    if(sep) out.push({ title: cleanCell(sep[1]), overview: cleanCell(sep[2]) });
+    else    out.push({ title: rest, overview: "" });
+  }
+  return out.map((o, i) => ({ id: String(i+1), title: o.title || "(タイトルなし)", overview: o.overview }));
+}
+
+function parseIdeas(raw){
+  let text = stripFences(String(raw)).trim();
+  if(!text) return { ideas:[], error:"中身が空です" };
+
+  let lines = text.split(/\r?\n/);
+
+  // 前置きがあればヘッダー行まで捨てる
+  const hLine = findHeaderLine(lines);
+  if(hLine > 0){ lines = lines.slice(hLine); text = lines.join("\n"); }
+
+  let rows = null;
+
+  if(lines.filter(l => l.trim().startsWith("|")).length >= 2){
+    rows = parseMarkdownTable(lines);
+  }else{
+    // ヘッダーが見当たらず、番号付きリストに見えるならそちらで読む
+    if(hLine < 0){
+      const nl = parseNumberedList(lines);
+      if(nl.length >= 2 && nl.filter(x => x.overview).length >= nl.length * 0.5){
+        return { ideas: nl, error:null };
+      }
+    }
+    const head = lines.slice(0, 12).join("\n");
+    const tabs = (head.match(/\t/g) || []).length;
+    const commas = (head.match(/,/g) || []).length;
+    rows = parseDelimited(text, tabs > commas ? "\t" : ",");
+  }
+
+  if(!rows || !rows.length) return { ideas:[], error:"表として読み取れませんでした" };
+
+  // ヘッダー行の解釈
+  let map = { id:-1, title:-1, over:-1 };
+  if(looksLikeHeader(rows[0])){
+    const n = rows[0].map(s => cleanCell(s).toLowerCase());
+    n.forEach((c,i)=>{
+      if(map.id<0    && H_ID.includes(c))    map.id = i;
+      if(map.title<0 && H_TITLE.includes(c)) map.title = i;
+      if(map.over<0  && H_OVER.includes(c))  map.over = i;
+    });
+    rows = rows.slice(1);
+  }
+  if(map.title < 0){
+    const w = Math.max(...rows.map(r => r.length));
+    if(w >= 3){ map = { id:0, title:1, over:2 }; }
+    else if(w === 2){
+      const numericFirst = rows.slice(0,5).every(r => /^\d+$/.test((r[0]||"").trim()));
+      map = numericFirst ? { id:0, title:1, over:-1 } : { id:-1, title:0, over:1 };
+    }
+    else { map = { id:-1, title:0, over:-1 }; }
+  }
+
+  const ideas = [];
+  const seen = new Set();
+  rows.forEach(r => {
+    const title = cleanCell(map.title >= 0 ? r[map.title] : "");
+    const over  = cleanCell(map.over  >= 0 ? r[map.over]  : "");
+    if(!title && !over) return;
+    let id = cleanCell(map.id >= 0 ? r[map.id] : "");
+    if(!id || seen.has(id)) id = String(ideas.length + 1);
+    seen.add(id);
+    ideas.push({ id, title: title || "(タイトルなし)", overview: over });
+  });
+
+  if(!ideas.length) return { ideas:[], error:"企画案を1件も取り出せませんでした" };
+  return { ideas, error:null };
+}
+
+function doImport(raw){
+  const { ideas, error } = parseIdeas(raw);
+  const box = $("importMsg");
+  box.style.display = "block";
+  if(error){
+    box.innerHTML = "読み込めませんでした：" + esc(error) +
+      "<br>ヘッダー行 <code>id,title,overview</code> のある CSV か、Markdown の表を貼り付けてください。";
+    return;
+  }
+  const hadEvals = Object.keys(state.evals).length > 0;
+  if(hadEvals && !confirm("すでに評価が入っています。新しいデータで置き換えると、いまの評価は消えます。続けますか？")){
+    box.style.display = "none";
+    return;
+  }
+  state.ideas = ideas;
+  state.evals = {};
+  state.cursor = 0;
+  state.importedAt = new Date().toISOString();
+  save();
+  const noOver = ideas.filter(x=>!x.overview).length;
+  box.innerHTML = "<b>" + ideas.length + " 件</b>読み込みました。"
+    + (noOver ? "（うち " + noOver + " 件は概要が空です）" : "")
+    + "「3. 評価」タブから始められます。";
+  renderCurState(); updateBadge();
+}
+
+$("btnImport").addEventListener("click", ()=>{
+  const v = $("importText").value;
+  if(!v.trim()){ toast("貼り付けてから押してください"); return; }
+  doImport(v);
+});
+$("btnFile").addEventListener("click", ()=> $("fileInput").click());
+$("fileInput").addEventListener("change", e=>{
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{ $("importText").value = String(r.result).replace(/^﻿/, ""); doImport($("importText").value); };
+  r.onerror = ()=> toast("ファイルを読めませんでした");
+  r.readAsText(f, "UTF-8");
+  e.target.value = "";
+});
+$("btnGoEval").addEventListener("click", ()=> showPanel("eval"));
+$("btnReset").addEventListener("click", ()=>{
+  if(!confirm("読み込んだ企画と評価をすべて消します。よろしいですか？\n（CSV に書き出していない結果は戻せません）")) return;
+  state = { ideas:[], evals:{}, cursor:0, importedAt:null };
+  save(); renderCurState(); updateBadge();
+  $("importMsg").style.display = "none";
+  toast("消去しました");
+});
+
+function renderCurState(){
+  const has = state.ideas.length > 0;
+  $("curState").style.display = has ? "block" : "none";
+  if(!has) return;
+  const c = counts();
+  const d = state.importedAt ? new Date(state.importedAt) : null;
+  $("curInfo").innerHTML =
+    "<b>" + state.ideas.length + " 件</b>の企画案"
+    + (d ? "（" + d.getFullYear() + "/" + (d.getMonth()+1) + "/" + d.getDate() + " 読み込み）" : "")
+    + "<br><span style='color:var(--muted);font-size:13px'>評価済み " + (c.o+c.t+c.x+c.h) + " 件 ／ 未評価 " + c.n + " 件</span>";
+}
+
+/* =========================================================
+   3. eval
+   ========================================================= */
+function esc(s){
+  return String(s).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+}
+function counts(){
+  const c = { o:0,t:0,x:0,h:0,n:0 };
+  state.ideas.forEach(it=>{
+    const r = state.evals[it.id] && state.evals[it.id].rating;
+    c[r && c.hasOwnProperty(r) ? r : "n"]++;
+  });
+  return c;
+}
+function updateBadge(){
+  const c = counts();
+  const done = c.o + c.t + c.x + c.h;
+  $("bEval").textContent = state.ideas.length ? (done + "/" + state.ideas.length) : "0";
+  $("brandSub").textContent = state.ideas.length ? state.ideas.length + " 案" : "";
+}
+
+function renderEval(){
+  const has = state.ideas.length > 0;
+  $("evalEmpty").style.display = has ? "none" : "block";
+  $("evalMain").style.display  = has ? "block" : "none";
+  if(!has){ updateBadge(); return; }
+
+  if(state.cursor < 0) state.cursor = 0;
+  if(state.cursor >= state.ideas.length) state.cursor = state.ideas.length - 1;
+
+  const it = state.ideas[state.cursor];
+  const ev = state.evals[it.id] || { rating:null, memo:"" };
+
+  $("ideaNo").textContent = "案 " + (state.cursor+1) + " / " + state.ideas.length + "　（id: " + it.id + "）";
+  $("ideaTitle").textContent = it.title;
+  $("ideaOverview").textContent = it.overview || "（概要なし）";
+  $("ideaStamp").innerHTML = ev.rating
+    ? '<span class="stamp ' + ev.rating + '">' + MARK[ev.rating] + " と評価済み</span>"
+    : "";
+
+  document.querySelectorAll("#rate button").forEach(b=>{
+    b.classList.toggle("on", b.dataset.r === ev.rating);
+  });
+  $("memo").value = ev.memo || "";
+
+  $("btnPrev").disabled = state.cursor === 0;
+  $("btnNext").disabled = state.cursor === state.ideas.length - 1;
+
+  // progress bar
+  const c = counts(), n = state.ideas.length;
+  $("pbar").innerHTML = ["o","t","x","h"]
+    .map(k => c[k] ? '<i class="' + k + '" style="width:' + (c[k]/n*100) + '%"></i>' : "")
+    .join("");
+  const done = c.o+c.t+c.x+c.h;
+  $("pLeft").textContent = "評価済み " + done + " / " + n;
+  $("pRight").textContent = "◯" + c.o + "　△" + c.t + "　×" + c.x + "　保留" + c.h + "　未" + c.n;
+
+  updateBadge();
+}
+
+/* 現在位置の次にある未評価の案を探す（末尾まで行ったら先頭に回り込む）。無ければ -1 */
+function nextUnratedIndex(from){
+  const n = state.ideas.length;
+  for(let i=1; i<=n; i++){
+    const j = (from + i) % n;
+    const ev = state.evals[state.ideas[j].id];
+    if(!ev || !ev.rating) return j;
+  }
+  return -1;
+}
+
+function setRating(r){
+  const it = state.ideas[state.cursor];
+  if(!it) return;
+  const cur = state.evals[it.id] || { rating:null, memo:"" };
+  const next = cur.rating === r ? null : r;   // 同じボタンで取り消し
+  const unratedBefore = counts().n;
+  state.evals[it.id] = { rating: next, memo: cur.memo || "", updatedAt: new Date().toISOString() };
+  save();
+
+  // 取り消したとき、自動送りが切ってあるときは、その場に留まる
+  if(!next || !$("optAuto").checked){ renderEval(); return; }
+
+  const j = nextUnratedIndex(state.cursor);
+
+  if(j >= 0){
+    // 未評価が残っている → そこへ移動（後ろに戻る場合は知らせる）
+    const back = j !== (state.cursor + 1) % state.ideas.length;
+    state.cursor = j; save(); renderEval();
+    if(back) toast("未評価の 案 " + (j+1) + " に移動しました");
+    return;
+  }
+
+  if(unratedBefore > 0){
+    // いまの操作で全件そろった → 結果へ
+    renderEval();
+    showPanel("result");
+    toast("全 " + state.ideas.length + " 案の評価が終わりました");
+    return;
+  }
+
+  // もともと全件評価済み（見直し中）→ 結果へ飛ばさず隣へ進むだけ
+  if(state.cursor < state.ideas.length - 1){ state.cursor++; save(); }
+  renderEval();
+}
+document.querySelectorAll("#rate button").forEach(b=>{
+  b.addEventListener("click", ()=> setRating(b.dataset.r));
+});
+
+$("memo").addEventListener("input", ()=>{
+  const it = state.ideas[state.cursor];
+  if(!it) return;
+  const cur = state.evals[it.id] || { rating:null, memo:"" };
+  cur.memo = $("memo").value;
+  cur.updatedAt = new Date().toISOString();
+  state.evals[it.id] = cur;
+  save();
+});
+
+function move(d){
+  const n = state.cursor + d;
+  if(n < 0 || n >= state.ideas.length) return;
+  state.cursor = n; save(); renderEval();
+}
+$("btnPrev").addEventListener("click", ()=> move(-1));
+$("btnNext").addEventListener("click", ()=> move(1));
+$("btnNextUnrated").addEventListener("click", ()=>{
+  const j = nextUnratedIndex(state.cursor);
+  if(j < 0){ toast("未評価の企画はありません"); return; }
+  state.cursor = j; save(); renderEval();
+});
+
+document.addEventListener("keydown", e=>{
+  if(!$("p-eval").classList.contains("active")) return;
+  const inMemo = e.target === $("memo");
+  if(inMemo){
+    if(e.key === "Escape" || (e.key === "Enter" && (e.metaKey || e.ctrlKey))){
+      $("memo").blur(); e.preventDefault();
+    }
+    return;
+  }
+  if(e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT") return;
+  const map = { "1":"o", "2":"t", "3":"x", "4":"h" };
+  if(map[e.key]){ setRating(map[e.key]); e.preventDefault(); return; }
+  if(e.key === "ArrowLeft"){ move(-1); e.preventDefault(); return; }
+  if(e.key === "ArrowRight"){ move(1); e.preventDefault(); return; }
+  if(e.key === "Enter"){ $("memo").focus(); e.preventDefault(); return; }
+});
+
+/* =========================================================
+   スワイプ評価（タッチ端末のみ / 右=◯ 左=×）
+   ========================================================= */
+(function(){
+  const card = $("ideaCard");
+  if(!card) return;
+  const stampO = card.querySelector(".swipe-stamp.o");
+  const stampX = card.querySelector(".swipe-stamp.x");
+
+  const width = () => card.getBoundingClientRect().width || 320;
+  const threshold = () => Math.min(96, width() * 0.28);
+
+  let sx = 0, sy = 0, dx = 0, pid = null, active = false, locked = false;
+
+  function paint(){
+    card.style.transform = "translateX(" + dx + "px) rotate(" + (dx * 0.035) + "deg)";
+    const k = Math.min(1, Math.abs(dx) / threshold());
+    stampO.style.opacity = dx < 0 ? k : 0;   // 左へ払う = ◯
+    stampX.style.opacity = dx > 0 ? k : 0;   // 右へ払う = ×
+  }
+  function release(animate){
+    card.style.transition = animate ? "transform .2s ease-out" : "none";
+    card.style.transform = "";
+    stampO.style.opacity = 0;
+    stampX.style.opacity = 0;
+    card.classList.remove("dragging");
+    try{ if(pid !== null && card.hasPointerCapture(pid)) card.releasePointerCapture(pid); }catch(_){}
+    dx = 0; active = false; locked = false; pid = null;
+  }
+  function fly(dir){
+    const rating = dir < 0 ? "o" : "x";   // 左=◯ / 右=×（ボタンの並びに合わせる）
+    card.style.transition = "transform .22s ease-out, opacity .22s ease-out";
+    card.style.transform = "translateX(" + (dir * width() * 1.5) + "px) rotate(" + (dir * 16) + "deg)";
+    card.style.opacity = "0";
+    setTimeout(function(){
+      release(false);
+      card.style.opacity = "";        // 何があっても見える状態に戻す
+      setRating(rating);              // 自動送り・完了時の遷移はここが受け持つ
+    }, 200);
+  }
+
+  card.addEventListener("pointerdown", function(e){
+    if(e.pointerType !== "touch") return;
+    if(!state.ideas.length) return;
+    if(e.target.closest("textarea,button,input,select,a")) return;
+    pid = e.pointerId; sx = e.clientX; sy = e.clientY;
+    dx = 0; active = true; locked = false;
+    card.style.transition = "none";
+  });
+
+  card.addEventListener("pointermove", function(e){
+    if(!active || e.pointerId !== pid) return;
+    const mx = e.clientX - sx, my = e.clientY - sy;
+    if(!locked){
+      // 縦に動いた場合はページスクロールに譲る
+      if(Math.abs(my) > Math.abs(mx) && Math.abs(my) > 10){ release(false); return; }
+      if(Math.abs(mx) < 8) return;
+      locked = true;
+      card.classList.add("dragging");
+      try{ card.setPointerCapture(pid); }catch(_){}
+    }
+    dx = mx;
+    paint();
+  });
+
+  card.addEventListener("pointerup", function(e){
+    if(!active || e.pointerId !== pid) return;
+    const d = dx;
+    if(locked && Math.abs(d) >= threshold()){ active = false; fly(d > 0 ? 1 : -1); }
+    else release(true);
+  });
+
+  card.addEventListener("pointercancel", function(){ if(active) release(true); });
+})();
+
+/* =========================================================
+   4. result
+   ========================================================= */
+let filter = "all";
+document.querySelectorAll("#filters .chip").forEach(b=>{
+  b.addEventListener("click", ()=>{
+    filter = b.dataset.f;
+    document.querySelectorAll("#filters .chip").forEach(x=>x.setAttribute("aria-pressed", String(x===b)));
+    renderList();
+  });
+});
+
+function renderResult(){
+  const has = state.ideas.length > 0;
+  $("resEmpty").style.display = has ? "none" : "block";
+  $("resMain").style.display  = has ? "block" : "none";
+  if(!has) return;
+  const c = counts();
+  $("stats").innerHTML =
+    ['<div class="stat o"><b>'+c.o+'</b><span>◯</span></div>',
+     '<div class="stat t"><b>'+c.t+'</b><span>△</span></div>',
+     '<div class="stat x"><b>'+c.x+'</b><span>×</span></div>',
+     '<div class="stat h"><b>'+c.h+'</b><span>保留</span></div>',
+     '<div class="stat"><b>'+c.n+'</b><span>未評価</span></div>'].join("");
+  $("csvText").value = buildCsv(false);
+  renderList();
+  updateBadge();
+}
+
+function renderList(){
+  const rows = state.ideas.map((it,i)=>{
+    const ev = state.evals[it.id] || {};
+    return { it, i, r: ev.rating || "n", memo: ev.memo || "" };
+  }).filter(r => filter === "all" ? true : r.r === filter);
+
+  if(!rows.length){ $("list").innerHTML = '<div class="empty">該当なし</div>'; return; }
+
+  $("list").innerHTML = rows.map(r =>
+    '<button class="item ' + r.r + '" data-i="' + r.i + '">'
+    + '<span class="nn">' + (r.i+1) + '</span>'
+    + '<span class="mk">' + (r.r === "n" ? "–" : r.r === "h" ? "⏸" : MARK[r.r]) + "</span>"
+    + '<span class="bd"><span class="ti">' + esc(r.it.title) + "</span>"
+    + (r.it.overview ? '<span class="ov">' + esc(r.it.overview) + "</span>" : "")
+    + (r.memo ? '<span class="mo">' + esc(r.memo) + "</span>" : "")
+    + "</span></button>"
+  ).join("");
+
+  $("list").querySelectorAll(".item").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      state.cursor = parseInt(b.dataset.i, 10);
+      save(); showPanel("eval");
+    });
+  });
+}
+
+/* ---------- CSV export ---------- */
+function csvCell(v){
+  const s = String(v == null ? "" : v);
+  return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+}
+function buildCsv(onlyGood){
+  const head = ["id","title","overview","evaluation","memo"];
+  const lines = [head.join(",")];
+  state.ideas.forEach(it=>{
+    const ev = state.evals[it.id] || {};
+    const r = ev.rating;
+    if(onlyGood && r !== "o") return;
+    lines.push([it.id, it.title, it.overview, r ? MARK[r] : "", ev.memo || ""].map(csvCell).join(","));
+  });
+  return lines.join("\r\n");
+}
+$("btnCsvCopy").addEventListener("click", ()=> copyText(buildCsv(false), "CSV をコピーしました"));
+$("csvText").addEventListener("focus", e => e.target.select());
+$("btnCsvOnly").addEventListener("click", ()=>{
+  const c = counts();
+  if(!c.o){ toast("◯の企画がまだありません"); return; }
+  copyText(buildCsv(true), "◯ " + c.o + " 件をコピーしました");
+});
+$("btnCsvDl").addEventListener("click", ()=>{
+  const blob = new Blob(["﻿" + buildCsv(false)], { type:"text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const d = new Date();
+  const p = n => String(n).padStart(2,"0");
+  a.href = url;
+  a.download = "kikaku-" + d.getFullYear() + p(d.getMonth()+1) + p(d.getDate()) + "-" + p(d.getHours()) + p(d.getMinutes()) + ".csv";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  toast("ダウンロードしました");
+});
+
+/* =========================================================
+   boot
+   ========================================================= */
+if(!STORE_OK) $("noStore").hidden = false;
+load();
+loadForm();
+updateBadge();
+renderCurState();
+if(state.ideas.length) showPanel("eval");
+</script>
+</body>
+</html>
