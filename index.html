@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="version" content="1.1.0">
 <title>企画セレクタ</title>
 <style>
 :root{
@@ -68,6 +69,21 @@ header{
   display:inline-block;min-width:18px;padding:0 5px;margin-left:5px;
   background:var(--border);color:var(--muted);
   border-radius:9px;font-size:11px;line-height:18px;text-align:center;font-weight:600;
+}
+
+/* ---------- mode switch (prompt tab) ---------- */
+.modesw{
+  display:flex; gap:4px; padding:4px; margin:22px 0 2px;
+  background:var(--surface-2); border:1px solid var(--border); border-radius:11px;
+}
+.modebtn{
+  flex:1 1 0; appearance:none; background:none; border:none; font:inherit;
+  font-size:13.5px; font-weight:600; color:var(--muted); cursor:pointer;
+  padding:9px 8px; border-radius:8px; white-space:nowrap;
+}
+.modebtn[aria-selected="true"]{
+  background:var(--surface); color:var(--text);
+  box-shadow:0 1px 2px rgba(0,0,0,.07);
 }
 
 /* ---------- generic ---------- */
@@ -259,18 +275,34 @@ button.btn:disabled{opacity:.4;cursor:not-allowed}
 
 <!-- ============ 1. PROMPT ============ -->
 <section class="panel active" id="p-prompt">
-  <h2>企画案を量産するプロンプトを作る</h2>
-  <p class="hint">条件を入れると Claude 用のプロンプトができます。コピーして Claude に貼り、出てきた表を「2. 読み込み」へ。</p>
+  <div class="modesw" role="tablist" aria-label="プロンプトの種類">
+    <button class="modebtn" data-m="kikaku" role="tab" aria-selected="true">企画</button>
+    <button class="modebtn" data-m="idea" role="tab" aria-selected="false">アイディア展開</button>
+  </div>
+
+  <h2 id="promptH2">企画案を量産するプロンプトを作る</h2>
+  <p class="hint" id="promptHint">条件を入れると Claude 用のプロンプトができます。コピーして Claude に貼り、出てきた表を「2. 読み込み」へ。</p>
 
   <div class="card">
-    <label for="fOutline">企画の概要 <span style="font-weight:400">（箇条書きでOK・必須）</span></label>
-    <textarea id="fOutline" rows="6" placeholder="・地方の老舗和菓子店のブランド動画
-・創業120年、若い世代に知られていない
-・「伝統」を押し出しすぎず、日常に馴染む感じにしたい
-・店主のキャラクターが濃くて面白い"></textarea>
+    <label for="fOutline" id="lbOutline">企画の概要 <span style="font-weight:400">（箇条書きでOK・必須）</span></label>
+    <textarea id="fOutline" rows="6"></textarea>
 
     <div class="row">
-      <div>
+      <div id="wIdeaWhere" style="display:none">
+        <label for="fIdeaWhere">展開を入れる位置</label>
+        <select id="fIdeaWhere">
+          <option>指定なし（どこでもよい）</option>
+          <option>冒頭のつかみ</option>
+          <option>序盤（状況を立てる）</option>
+          <option>中盤の転換</option>
+          <option>山場・クライマックス</option>
+          <option>結末・オチ</option>
+          <option>全体を通す仕掛け</option>
+          <option value="__other__">その他（自由入力）</option>
+        </select>
+        <input type="text" id="fIdeaWhereOther" placeholder="位置を入力" style="display:none;margin-top:7px">
+      </div>
+      <div id="wFormat">
         <label for="fFormat">企画の形式</label>
         <select id="fFormat">
           <option>広告（TVCM・Web動画広告）</option>
@@ -287,8 +319,8 @@ button.btn:disabled{opacity:.4;cursor:not-allowed}
         </select>
         <input type="text" id="fFormatOther" placeholder="形式を入力" style="display:none;margin-top:7px">
       </div>
-      <div>
-        <label for="fCount">出力する企画案の数</label>
+      <div id="wCount">
+        <label for="fCount" id="lbCount">出力する企画案の数</label>
         <select id="fCount">
           <option>20</option><option>30</option><option>50</option>
           <option>80</option><option>100</option>
@@ -299,11 +331,13 @@ button.btn:disabled{opacity:.4;cursor:not-allowed}
       </div>
     </div>
 
-    <label for="fTitleFmt">タイトルの形式（任意）</label>
-    <input type="text" id="fTitleFmt" placeholder="◯◯拳　／　◯◯拳法　／　〜の日　など">
-    <p class="hint" style="margin:6px 0 0">指定すると、すべての企画タイトルをこの型で作らせます。空欄なら自由な名前になります。</p>
+    <div id="wTitleFmt">
+      <label for="fTitleFmt">タイトルの形式（任意）</label>
+      <input type="text" id="fTitleFmt" placeholder="◯◯拳　／　◯◯拳法　／　〜の日　など">
+      <p class="hint" style="margin:6px 0 0">指定すると、すべての企画タイトルをこの型で作らせます。空欄なら自由な名前になります。</p>
+    </div>
 
-    <div class="row">
+    <div class="row" id="wTargetLength">
       <div>
         <label for="fTarget">ターゲット</label>
         <input type="text" id="fTarget" placeholder="20〜30代の女性、都市部在住">
@@ -314,16 +348,16 @@ button.btn:disabled{opacity:.4;cursor:not-allowed}
       </div>
     </div>
 
-    <label for="fGoal">目的・ゴール</label>
-    <input type="text" id="fGoal" placeholder="認知拡大。まず「知ってもらう」ことを優先">
+    <div id="wGoal">
+      <label for="fGoal">目的・ゴール</label>
+      <input type="text" id="fGoal" placeholder="認知拡大。まず「知ってもらう」ことを優先">
+    </div>
 
-    <label for="fTone">トーン＆マナー</label>
-    <input type="text" id="fTone" placeholder="上品すぎず、少しユーモアがある">
+    <label for="fTone" id="lbTone">トーン＆マナー</label>
+    <input type="text" id="fTone">
 
-    <label for="fNg">制約・NG・必須要素</label>
-    <textarea id="fNg" rows="3" placeholder="・タレント起用はなし
-・店内での撮影が中心
-・タイトルは「◯◯拳」の形で統一する"></textarea>
+    <label for="fNg" id="lbNg">制約・NG・必須要素</label>
+    <textarea id="fNg" rows="3"></textarea>
 
     <div class="btnrow">
       <button class="btn primary" id="btnGen">プロンプトを作る</button>
@@ -337,7 +371,7 @@ button.btn:disabled{opacity:.4;cursor:not-allowed}
     <div class="btnrow">
       <button class="btn primary" id="btnCopyPrompt">プロンプトをコピー</button>
     </div>
-    <div class="note">コピーしたら Claude に貼り付けてください。返ってきた CSV（または表）をそのまま「2. 読み込み」に貼れば取り込めます。</div>
+    <div class="note" id="promptNote">コピーしたら Claude に貼り付けてください。返ってきた CSV（または表）をそのまま「2. 読み込み」に貼れば取り込めます。</div>
   </div>
 </section>
 
@@ -469,7 +503,12 @@ button.btn:disabled{opacity:.4;cursor:not-allowed}
    state
    ========================================================= */
 const KEY = "kikaku-selector-v1";
-const FORM_KEY = "kikaku-selector-form-v1";
+const MODE_KEY = "kikaku-selector-mode-v1";
+const FORM_KEYS = {
+  kikaku: "kikaku-selector-form-v1",       // 既存キーを流用（今までの入力が消えない）
+  idea:   "kikaku-selector-form-idea-v1",
+};
+let mode = "kikaku";
 const MARK = { o:"◯", t:"△", x:"×", h:"保留" };
 
 let state = { ideas:[], evals:{}, cursor:0, importedAt:null };
@@ -557,7 +596,40 @@ document.querySelectorAll(".tab").forEach(b=>{
 /* =========================================================
    1. prompt builder
    ========================================================= */
-const FORM_FIELDS = ["fOutline","fFormat","fFormatOther","fCount","fCountOther","fTitleFmt","fTarget","fLength","fGoal","fTone","fNg"];
+const FORM_FIELDS = ["fOutline","fFormat","fFormatOther","fIdeaWhere","fIdeaWhereOther","fCount","fCountOther","fTitleFmt","fTarget","fLength","fGoal","fTone","fNg"];
+
+/* モードごとに差し替える文言。show/hide は下の *_ONLY で制御 */
+const KIKAKU_ONLY = ["wFormat","wTitleFmt","wTargetLength","wGoal"];
+const IDEA_ONLY   = ["wIdeaWhere"];
+
+const MODE_TEXT = {
+  kikaku: {
+    h2:"企画案を量産するプロンプトを作る",
+    hint:"条件を入れると Claude 用のプロンプトができます。コピーして Claude に貼り、出てきた表を「2. 読み込み」へ。",
+    outline:'企画の概要 <span style="font-weight:400">（箇条書きでOK・必須）</span>',
+    outlinePh:"・地方の老舗和菓子店のブランド動画\n・創業120年、若い世代に知られていない\n・「伝統」を押し出しすぎず、日常に馴染む感じにしたい\n・店主のキャラクターが濃くて面白い",
+    count:"出力する企画案の数",
+    tone:"トーン＆マナー",
+    tonePh:"上品すぎず、少しユーモアがある",
+    ng:"制約・NG・必須要素",
+    ngPh:"・タレント起用はなし\n・店内での撮影が中心\n・タイトルは「◯◯拳」の形で統一する",
+    note:"コピーしたら Claude に貼り付けてください。返ってきた CSV（または表）をそのまま「2. 読み込み」に貼れば取り込めます。",
+    defCount:"150",
+  },
+  idea: {
+    h2:"展開のアイディアを量産するプロンプトを作る",
+    hint:"作品の設定を入れると Claude 用のプロンプトができます。コピーして Claude に貼り、出てきた表を「2. 読み込み」へ。",
+    outline:'作品の設定・あらすじ <span style="font-weight:400">（箇条書きでOK・必須）</span>',
+    outlinePh:"・地方都市の古い銭湯が舞台\n・番台を継いだ30代の主人公と、通いつめる無口な老人\n・老人は毎日同じ時間に来て、同じ場所に座る\n・主人公は店を畳むか続けるか迷っている",
+    count:"出力するアイディアの数",
+    tone:"ジャンル・トーン",
+    tonePh:"静かなヒューマンドラマ。湿っぽくしすぎない",
+    ng:"制約・NG・必ず使う要素",
+    ngPh:"・登場人物は3人まで\n・銭湯の中から出ない\n・回想シーンは使わない",
+    note:"コピーしたら Claude に貼り付けてください。返ってきた CSV（または表）をそのまま「2. 読み込み」に貼れば取り込めます。",
+    defCount:"50",
+  },
+};
 
 function bindOther(selId, otherId){
   const sel = $(selId), other = $(otherId);
@@ -569,25 +641,198 @@ function bindOther(selId, otherId){
   sel.addEventListener("change", ()=>{ sync(); saveForm(); });
   return sync;
 }
-const syncFormat = bindOther("fFormat","fFormatOther");
-const syncCount  = bindOther("fCount","fCountOther");
+const syncFormat    = bindOther("fFormat","fFormatOther");
+const syncCount     = bindOther("fCount","fCountOther");
+const syncIdeaWhere = bindOther("fIdeaWhere","fIdeaWhereOther");
+const syncAllOther  = ()=>{ syncFormat(); syncCount(); syncIdeaWhere(); };
+
+function applyMode(){
+  const t = MODE_TEXT[mode];
+  $("promptH2").textContent   = t.h2;
+  $("promptHint").textContent = t.hint;
+  $("lbOutline").innerHTML    = t.outline;
+  $("fOutline").placeholder   = t.outlinePh;
+  $("lbCount").textContent    = t.count;
+  $("lbTone").textContent     = t.tone;
+  $("fTone").placeholder      = t.tonePh;
+  $("lbNg").textContent       = t.ng;
+  $("fNg").placeholder        = t.ngPh;
+  $("promptNote").textContent = t.note;
+  KIKAKU_ONLY.forEach(id => $(id).style.display = (mode === "kikaku") ? "" : "none");
+  IDEA_ONLY.forEach(id   => $(id).style.display = (mode === "idea")   ? "" : "none");
+  document.querySelectorAll(".modebtn").forEach(b=>{
+    b.setAttribute("aria-selected", String(b.dataset.m === mode));
+  });
+}
+
+function resetFields(){
+  FORM_FIELDS.forEach(k=>{ const el=$(k); if(el.tagName==="SELECT") el.selectedIndex=0; else el.value=""; });
+  $("fCount").value = MODE_TEXT[mode].defCount;
+}
+
+function setMode(m){
+  if(m === mode) return;
+  saveForm();                 // 切り替える前に、今のモードの入力を保存
+  mode = m;
+  try{ localStorage.setItem(MODE_KEY, m); }catch(e){}
+  applyMode();
+  resetFields();              // 前モードの値を消してから
+  loadForm();                 // このモードの保存値を読み込む
+  $("promptWrap").style.display = "none";
+}
+document.querySelectorAll(".modebtn").forEach(b=>{
+  b.addEventListener("click", ()=> setMode(b.dataset.m));
+});
 
 function saveForm(){
   const d = {};
   FORM_FIELDS.forEach(k=> d[k] = $(k).value);
-  try{ localStorage.setItem(FORM_KEY, JSON.stringify(d)); }catch(e){}
+  try{ localStorage.setItem(FORM_KEYS[mode], JSON.stringify(d)); }catch(e){}
 }
 function loadForm(){
   try{
-    const d = JSON.parse(localStorage.getItem(FORM_KEY) || "null");
-    if(!d) return;
-    FORM_FIELDS.forEach(k=>{ if(typeof d[k] === "string") $(k).value = d[k]; });
+    const d = JSON.parse(localStorage.getItem(FORM_KEYS[mode]) || "null");
+    if(d) FORM_FIELDS.forEach(k=>{ if(typeof d[k] === "string") $(k).value = d[k]; });
   }catch(e){}
-  syncFormat(); syncCount();
+  syncAllOther();
 }
 FORM_FIELDS.forEach(k=> $(k).addEventListener("input", saveForm));
 
 function buildPrompt(){
+  return mode === "idea" ? buildIdeaPrompt() : buildKikakuPrompt();
+}
+
+/* 案数を読む。共通処理 */
+function readCount(){
+  let c = $("fCount").value === "__other__" ? $("fCountOther").value.trim() : $("fCount").value;
+  c = parseInt(c, 10);
+  if(!c || c < 1){ toast("案数を入力してください"); return null; }
+  return c;
+}
+/* 入力があれば【ラベル】付きブロックにする。空なら何も出さない */
+function optBlock(label, id){
+  const v = $(id).value.trim();
+  return v ? `【${label}】\n${v}\n\n` : "";
+}
+
+/* ---- アイディア展開モード ----
+   切り口は library/脚本/ の知見にもとづく。
+   ・面白さの4レイヤー（心理／構造／人物／技巧）＝ 面白い脚本の方法論リサーチ 総論
+   ・時間スケール（ネスト型の疑問）＝ 脚本執筆テクニック・実践ガイド 5章
+   ・仕掛けの型（伏線／ミスディレクション／ドラマティックアイロニー）＝ 同リサーチ 4章
+   ・つかみの型 ＝ 同ガイド 2章
+   ・Want と Need のズレ ＝ Truby 骨格7ステップ
+   ・驚き＋納得のセット（報酬予測誤差）＝ 同リサーチ 1-2
+   ・情報ギャップの最適サイズ ＝ Loewenstein 1994、同リサーチ 1-1              */
+function buildIdeaPrompt(){
+  const outline = $("fOutline").value.trim();
+  if(!outline){ toast("作品の設定・あらすじを入力してください"); $("fOutline").focus(); return null; }
+
+  const count = readCount();
+  if(!count) return null;
+  const half = Math.max(1, Math.ceil(count / 2));
+
+  const where = $("fIdeaWhere").value === "__other__"
+    ? ($("fIdeaWhereOther").value.trim() || "指定なし")
+    : $("fIdeaWhere").value;
+  const whereFixed = !where.startsWith("指定なし");
+
+  return (
+`あなたは経験豊富な日本の脚本家です。これからシナリオに組み込む「展開」の発散を手伝ってもらいます。
+
+出力はすべて日本語で書いてください。英語は使わないでください。
+
+【作品の設定・あらすじ】
+${outline}
+
+【展開を入れる位置】
+${where}
+
+${optBlock("ジャンル・トーン","fTone")}${optBlock("制約・NG・必ず使う要素","fNg")}【依頼】
+上の条件をふまえて、この作品に組み込める展開のアイディアを ${count} 本出してください。
+
+ここで言う「展開」とは、物語を次の状態へ動かす出来事・転換・仕掛けのことです。**1本ごとに独立した別案として書いてください。** ${count} 本つなげて1本の物語にしないこと。
+${whereFixed ? `\nすべての案は「${where}」に置く展開として書いてください。\n` : ""}
+この段階で欲しいのは完成度ではなく幅です。粗いままで構いません。あとで人間が1本ずつ選別します。
+
+■ 発想の層を変える
+次の4つの層から、それぞれ同じくらいの本数を出してください。どれかに偏らせないこと。
+
+- **心理**：観客の予測を操作する（情報をいつ出すか、何を隠すか、どこへ誤誘導するか）
+- **構造**：物語の順序や時間の扱いを変える（時系列の入れ替え、反復、対比、同じ場面の再演）
+- **人物**：登場人物の内面や関係が変わることで話が動く
+- **技巧**：仕掛けそのもので驚かせる（伏線の回収、思い違い、観客だけが知っている状況）
+
+■ 時間の大きさを変える
+大きな展開ばかりにしないこと。次の4段階を混ぜてください。
+
+- **数秒**で終わる展開（ひとつの台詞、ひとつの視線、ひとつの動作）
+- **1〜3分**の展開（ひとつの場面の中で完結する）
+- **5〜10分**の展開（いくつかの場面をまたぐ）
+- **全編**を貫く展開
+
+小さいスケールの案を軽視しないでください。数秒の展開が話を決めることがあります。
+
+■ 仕掛けの型を変える
+- 前に置いたものを後で回収する。**露骨だと先読みされ、隠しすぎると置いていかれる。「後から思い返せば分かる」程度の目立たなさを狙う**
+- 画面内の別のものに注意を向けさせ、本当に見るべきものを隠す
+- ジャンルの定石を観客の思い込みとして利用し、それを外す
+- 観客は知っているが登場人物は知らない状態を作る（観客だけを味方につける）
+
+■ つかみの作り方を変える
+- 最悪の出来事から始める／対照的な2人を並べる／時間制限を置く／そこから出られない場所に閉じ込める／誰もが抱える問題を扱う／話の途中から始める
+
+■ 人物の内側から発想する
+- 表向きに欲しいもの（目的）と、本当に必要なもの（欠けているもの）をずらす
+- 目的は達成できなかったのに、必要なものは手に入った、という決着にする
+
+■ 賭けているものを上げる／下げる
+- 失敗したときに失うものを大きくする。さらに**避けようとするほど深く陥る**構造にすると、逃げ道がないと感じさせられる
+- 逆に、停滞・失敗・空振りの展開も混ぜる。**谷があるから山が立つ**
+
+■ 手堅さと新規性の配分
+案全体を「手堅い」から「実験的」まで幅広く散らしてください。どちらかに寄せないこと。目安は次の配分です。
+
+- 約3割：**王道**。定石どおりで、そのまま脚本に入れても成立する。奇抜さより確実さを取った案
+- 約5割：**一点突破**。全体は手堅いが、切り口・構造・見せ方のどこか一箇所だけを大きく捻った案
+- 約2割：**実験的**。前例がなく、成立するか分からない案。予算や常識をいったん脇に置いてよい。ここが後で効く
+
+実験的な案も、奇をてらっただけで終わらせないこと。なぜこの作品で成立するのかが、読んで1行で分かるように書く。
+
+■ 凡庸な案を避けるための指示
+- **驚きと納得をセットにする。** 予定調和だけの展開は退屈になる。だが裏切っただけでは不満が残る。「意外だが、それなら納得だ」と後から思える理由を必ず用意する
+- 「感動的」「衝撃的」「意外な展開」など、どの作品にも当てはまる言い方は禁止。この作品でしか成立しない具体を書く
+- 前の出来事と「そして」で並ぶだけの展開は書かない。**「それゆえに」でつながる展開**を書く
+- テーマをナレーションやセリフで直接語らせる案は書かない。画・小道具・反復・構造で示す
+- 明かす情報の量に気をつける。すぐ分かることは気にされず、まったく分からないことは興味を失われる。**「もう少しで分かりそう」の位置で止める**
+- 書き終えたあとで似た案が5本以上固まっていたら、その塊は捨てて、正反対の案に置き換える
+
+【出力形式】
+CSV だけを出力してください。**返答の1文字目が「id,」になるようにしてください。**
+挨拶・前置き・見出し・箇条書き・表・最後のまとめ・コードブロックの囲みは、いっさい付けないでください。
+
+id,title,overview
+
+- **中身（title と overview）は必ず日本語で書いてください。** 1行目のヘッダーだけは上記のとおり半角英字のままにしてください（ツールが読み取るためです）。ヘッダーが英語であることに引きずられて、本文まで英語で書かないでください
+- id は 1 から ${count} までの連番
+- title は 20 字以内を目安に、その展開が何かひと目で分かる日本語の名前にする
+- overview は 80〜140 字の日本語。**「何が起きるか」→「それによって話がどう変わるか」**の順で書く。抽象語で埋めない
+- フィールドにカンマ・改行・引用符が含まれる場合は、必ずダブルクォートで囲む（引用符自体は "" と二重にする）
+
+【出力前の自己点検】
+CSV を書き終えたら、出力する前に次を点検してください。
+
+1. 4つの層（心理／構造／人物／技巧）と時間の大きさ（数秒／1〜3分／5〜10分／全編）が、**1本目から ${count} 本目まで**に散らばっているか。偏っていたら書き直す
+2. 特に**後半（${half} 本目以降）**を重点的に確認すること。長く書き続けると、この部分から似た案の繰り返しになります
+3. id が 1 から ${count} まで抜けなく連番になっているか
+4. 守れていない行が1つでもあれば、その行を書き直してから出力すること
+
+点検の過程や結果は書かないでください。出力するのは CSV 本体だけです。
+`);
+}
+
+/* ---- 企画モード（v1.0.0 のまま。形式遵守の検証済み） ---- */
+function buildKikakuPrompt(){
   const outline = $("fOutline").value.trim();
   if(!outline){ toast("企画の概要を入力してください"); $("fOutline").focus(); return null; }
 
@@ -680,9 +925,8 @@ $("btnGen").addEventListener("click", ()=>{
 $("btnCopyPrompt").addEventListener("click", ()=> copyText($("promptOut").value, "プロンプトをコピーしました"));
 $("btnClearForm").addEventListener("click", ()=>{
   if(!confirm("入力内容を消しますか？")) return;
-  FORM_FIELDS.forEach(k=>{ const el=$(k); if(el.tagName==="SELECT") el.selectedIndex=0; else el.value=""; });
-  $("fCount").value = "150";
-  syncFormat(); syncCount(); saveForm();
+  resetFields();
+  syncAllOther(); saveForm();
   $("promptWrap").style.display = "none";
 });
 
@@ -1222,6 +1466,12 @@ $("btnCsvDl").addEventListener("click", ()=>{
    ========================================================= */
 if(!STORE_OK) $("noStore").hidden = false;
 load();
+try{
+  const m = localStorage.getItem(MODE_KEY);
+  if(m === "idea" || m === "kikaku") mode = m;
+}catch(e){}
+applyMode();
+resetFields();
 loadForm();
 updateBadge();
 renderCurState();
